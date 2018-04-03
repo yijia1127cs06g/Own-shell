@@ -13,10 +13,11 @@ char **args_parse(char *);
 int count_args(char **);
 int execute_cmd(int, char**);
 
-int main(int argc, char *argv[], char *envp[]){
-    
-    EUID = argv[0];
-    GUID = argv[1];
+int main(int argc, char **argv){
+    //EUID = atoi(argv[1]);
+    //EGID = atoi(argv[2]);
+    //setuid(EUID);
+    //setgid(EGID);
     while(1)
         shell();
 
@@ -29,6 +30,7 @@ void shell(void){
     int status;
 
     fprintf(stdout, "$ ");
+    fflush(stdout);
     cmd = read_cmd();
     args = args_parse(cmd);
     args_count = count_args(args);

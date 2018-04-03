@@ -5,10 +5,10 @@ CC = /usr/bin/gcc
 PROG = shell
 
 # The name of the object files
-OBJS = command.o shell.o
+OBJS = command.o shell.o support.o
 
 # All the header and c files
-SRCS = shell.c command.c
+SRCS = shell.c command.c support.c
 HDRS = shell.h
 
 # Add -I to the dir the curl include files are in
@@ -24,6 +24,9 @@ shell.o: shell.c shell.h
 
 command.o: command.c shell.h
 	$(CC) $(CFLAGS) -c command.c
+
+support.o: support.c shell.h
+	$(CC) $(CFLAGS) -c support.c
 
 # Clean up crew
 clean: 
