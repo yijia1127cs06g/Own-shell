@@ -2,7 +2,7 @@
 CC = /usr/bin/gcc
 
 # Name of program
-PROG = shell
+PROG = hw1
 
 # The name of the object files
 OBJS = command.o shell.o support.o
