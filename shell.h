@@ -19,6 +19,7 @@ int cmd_rmdir(int, char**);
 int cmd_stat(int, char**);
 int cmd_touch(int, char **);
 int cmd_umask(int, char **);
+int cmd_default(int, char **);
 
 char * cmd_list[] = {
     "cat",
@@ -53,7 +54,7 @@ int (*cmd_func[])(int argc, char **argv) = {
     &cmd_rmdir,
     &cmd_stat,
     &cmd_touch,
-    &cmd_umask
+    &cmd_umask,
 };
 
 int cmd_count(){return sizeof(cmd_list)/ sizeof(char*); }

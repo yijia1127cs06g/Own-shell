@@ -33,14 +33,17 @@ int cmd_cat(int argc, char **argv){
         perror("cat");
         return -1;
     }
-    stat(argv[1],&buffer);
+    if (stat(argv[1],&buffer)<0){
+        perror("cat");
+        return -1;
+    }
     if(S_ISDIR(buffer.st_mode)){
         fprintf(stderr,"cat: %s is directory\n", argv[1]);
         return -1;
     }
     while((ch = getc(fp)) != EOF)
-        putc(ch, stdout);   
-        fflush(stdout);
+        putc(ch, stdout);
+    fflush(stdout);
 
     if(fclose(fp) != 0){
         perror("cat");
@@ -54,38 +57,41 @@ int cmd_cat(int argc, char **argv){
 int cmd_echo(int argc, char **argv){
     FILE *fp;
     struct stat buffer;
-    if (argc == 2){
+    
+    if (argc != 2 && argc != 3){
+        fprintf(stderr, "Usage: echo str [filename]\n");
+        return -1;
+    }
+    else if (argc == 2){
         fprintf(stdout, "%s\n", argv[1]);
         fflush(stdout);
         return 0;
     }
-    else if (argc == 3){
-        if (stat(argv[2],&buffer)<0){
-            perror("echo");
-            return -1;
-        }
-        if (S_ISDIR(buffer.st_mode)){
-            fprintf(stderr, "cat: %s is directory\n", argv[2]);
-        }
-        if(access(argv[2],W_OK) != -1){
-            if ((fp=fopen(argv[2], "a")) == NULL){
+    else{ //argc==3
+
+        if(access(argv[2],F_OK)!=-1){
+            if (stat(argv[2],&buffer) <0){
                 perror("echo");
                 return -1;
             }
-            fputs(argv[1], fp);
-            fclose(fp);
-            return 0;
+            if (S_ISDIR(buffer.st_mode)){
+                fprintf(stderr, "cat: %s is directory\n", argv[2]);
+                return -1;
+            }
+            if(access(argv[2],W_OK)<0){
+                perror("echo");
+                return -1;
+            }
         }
-        else{
-            perror("echo");
-            return -1;
+        if ((fp=fopen(argv[2], "a")) == NULL){
+                perror("echo");
+                return -1;
         }
-    }
-    else{
-        fprintf(stderr, "Usage: echo string [filename]\n");
-        return -1;
-    }
 
+        fprintf(fp,"%s\n",argv[1]);
+        fclose(fp);
+        return 0;
+    }
 }
 
 int cmd_exit(int argc, char **argv){
@@ -152,13 +158,14 @@ int cmd_find(int argc, char **argv){
     else if (argc==1){
         dir = opendir(".");
     }
-    else{
+    else{ //argc==2
         if (access(argv[1], R_OK)<0){
             perror("find");
             return -1;
         }
         dir = opendir(argv[1]);
     }
+
     if ( dir == NULL){
         perror("find");
         closedir(dir);
@@ -167,10 +174,14 @@ int cmd_find(int argc, char **argv){
 
     while((dirpath=readdir(dir)) != NULL){
         sprintf(file_buffer,"%s/%s", argc>1?argv[1]:".",dirpath->d_name);
-        stat(file_buffer, &buffer);
+        if(stat(file_buffer, &buffer)<0){
+            perror("stat");
+            return -1;
+        }
         convert_permission(permission, buffer.st_mode);
-        fprintf(stdout,"%s %ld %d %s\n",permission, buffer.st_size
-                ,dirpath->d_type,dirpath->d_name);
+        fprintf(stdout,"%s %-2lu %4d %4d %6ld\t%s\n", permission
+                ,buffer.st_nlink,buffer.st_uid,buffer.st_gid
+                ,buffer.st_size,dirpath->d_name);
     }
     fflush(stdout);
     closedir(dir);
@@ -221,7 +232,10 @@ int cmd_stat(int argc, char **argv){
         perror("stat");
         return -1;
     }
-    stat(argv[1],&buffer);
+    if(stat(argv[1],&buffer)<0){
+        perror("stat");
+        return -1;
+    }
     convert_permission(permission,buffer.st_mode);
     fprintf(stdout, "  File: \'%s\'\n", argv[1]);
     fprintf(stdout, "  Size: %ld\t\tBlocks: %ld\tIO Blocks: %ld\t",
@@ -289,15 +303,24 @@ int cmd_chmod(int argc, char **argv){
 }
 
 int cmd_touch(int argc, char**argv){
+    struct stat buffer;
     if (argc != 2){
         fprintf(stderr,"Usage: touch file");
         return -1;
     }
     if (access(argv[1],F_OK) != -1){
-        if ((utime(argv[1],NULL))!=0){
+        if(stat(argv[1], &buffer)<0){
             perror("touch");
             return -1;
         }
+        if(S_ISREG(buffer.st_mode)){
+            if ((utime(argv[1],NULL))!=0){
+                perror("touch");
+                return -1;
+            }
+        }
+        else
+            fprintf(stderr,"touch: only can modify regular file\n");
     }
     else{
         if(creat(argv[1],(S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH))<0) {
@@ -321,3 +344,4 @@ int cmd_help(int argc, char**argv){
     fflush(stdout);
     return 0;
 }
+

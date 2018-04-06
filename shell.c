@@ -14,10 +14,10 @@ int count_args(char **);
 int execute_cmd(int, char**);
 
 int main(int argc, char **argv){
-    //EUID = atoi(argv[1]);
-    //EGID = atoi(argv[2]);
-    //setuid(EUID);
-    //setgid(EGID);
+    EUID = atoi(argv[1]);
+    EGID = atoi(argv[2]);
+    setuid(EUID);
+    setgid(EGID);
     while(1)
         shell();
 
@@ -94,8 +94,8 @@ int execute_cmd(int args_count,char **argv){
         if(strcmp(argv[0],cmd_list[i])==0){
             return (*cmd_func[i])(args_count, argv);
     }
+    fprintf(stderr ,"%s: command not found\n",argv[0]);
     return -1;
-
 }
 
 char * gets_line(char *st, int n){
