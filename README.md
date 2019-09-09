@@ -1,4 +1,4 @@
-# Homework #1
+# Own Shell
 Secure interactive shell with some built-in commands.
 Below is the list of commands:
 cat			cd	
